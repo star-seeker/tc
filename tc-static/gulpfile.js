@@ -116,7 +116,7 @@ gulp.task('stylesheet', function () {
         .src('src/resources/styles/**/*.css')
         // 静态检查
         .pipe(csslint())
-        .pipe(csslint.formatter())
+        .pipe(csslint.formatter('compact'))
         // 替换静态资源前缀路径
         .pipe(replace(/\/tc-static\/src\/resources/g, _environment.staticBase))
         // 压缩(开发不压缩)
@@ -135,14 +135,11 @@ gulp.task('mg-script-libs', function (cb) {
     del('src/resources/libs/_flib.min.js', cb);
     return gulp
         .src([
-            'src/resources/libs/jquery-3.2.0.min.js',
-            'src/resources/libs/vue.min.js',
-            'src/resources/libs/axios.min.js',
-            'src/resources/libs/lodash.min.js',
-            'src/resources/libs/assets/js/zui.min.js',
-            'src/resources/libs/layer/layer.min.js'
+            'src/resources/libs/core/jquery-3.2.0.min.js',
+            'src/resources/libs/thirdparty/axios.min.js',
+            'src/resources/libs/thirdparty/lodash.min.js'
         ])
-        .pipe(concat('_flib.min.js'))
+        .pipe(concat('_header_lib.min.js'))
         .pipe(gulp.dest('src/resources/libs'));
 });
 
@@ -151,11 +148,9 @@ gulp.task('mg-style-libs', function (cb) {
     del('src/resources/libs/_tlib.min.css', cb);
     return gulp
         .src([
-            'src/resources/libs/normalize.min.css',
-            'src/resources/libs/assets/css/zui.min.css',
-            'src/resources/libs/assets/css/zui-theme.min.css'
+            'src/resources/libs/core/normalize.min.css'
         ])
-        .pipe(concatCss("_tlib.min.css"))
+        .pipe(concatCss("_footer_lib.min.css"))
         .pipe(gulp.dest('src/resources/libs'));
 });
 
@@ -164,9 +159,8 @@ gulp.task('libs-static', function () {
     // 所有libs均已压缩
     return gulp
         .src([
-            // libs不打包为min文件不打包
-            'src/resources/libs/**/*.min.js',
-            'src/resources/libs/**/*.min.css'
+            'src/resources/libs/**/*.js',
+            'src/resources/libs/**/*.css'
         ])
         // 加版本号
         .pipe(rev())
@@ -183,9 +177,7 @@ gulp.task('libs-other', function () {
         .src([
             'src/resources/libs/**/*.*',
             '!src/resources/libs/**/*.js',
-            '!src/resources/libs/**/*.css',
-            // layer 动态加载内容 在special进行编译
-            '!src/resources/libs/layer/skin/default/*.*'])
+            '!src/resources/libs/**/*.css'])
         .pipe(gulp.dest('dist/resources/libs'));
 });
 
@@ -234,9 +226,13 @@ gulp.task('html', function () {
 // 编译特殊文件
 gulp.task('special', function () {
     return gulp
-    // 因为静态资源合并 相对路径发生改变 手动加载此文件
-        .src('src/resources/libs/layer/skin/default/*.*')
-        .pipe(gulp.dest('dist/resources/libs/skin/default'));
+        // layui 使用模块名加载模块 加版本之后文件名变化无法获取 复制源文件到目的地
+        .src([
+            'src/resources/libs/layui/**/*.js',
+            'src/resources/libs/layui/**/*.css'
+        ])
+        // 输出
+        .pipe(gulp.dest('dist/resources/libs/layui'));
 });
 
 // ----- 服务器
